@@ -1,18 +1,19 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-export default function InstructorDashboard() {
+export default function StudentDashboard() {
   const [token, setToken] = useState("");
   const [data, setData] = useState(null);
 
-  const loginInstructor = async () => {
+  const login = async () => {
     const res = await fetch(`${API_URL}/api/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: "instructor@codesaathi.com", password: "Instructor@123" }),
+      body: JSON.stringify({ email: "student@codesaathi.com", password: "Student@123" }),
     });
 
     const result = await res.json();
@@ -20,77 +21,78 @@ export default function InstructorDashboard() {
     setData(result);
   };
 
-  const createCourse = async () => {
-    const res = await fetch(`${API_URL}/api/courses`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        title: "JavaScript Mastery",
-        description: "Complete JavaScript course for beginners",
-        category: "Programming",
-        difficulty: "beginner",
-      }),
+  const loadProgress = async () => {
+    const res = await fetch(`${API_URL}/api/progress/me`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
-
     setData(await res.json());
   };
 
-  const createChallenge = async () => {
-    const res = await fetch(`${API_URL}/api/coding`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        title: "Print Welcome",
-        description: "Print Welcome to CodeSaathi",
-        difficulty: "easy",
-        testCases: [{ input: "", expectedOutput: "Welcome to CodeSaathi" }],
-        hints: ["Use print/console.log"],
-      }),
+  const loadXP = async () => {
+    const res = await fetch(`${API_URL}/api/leaderboard/me`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
-
     setData(await res.json());
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-6">
-      <section className="max-w-6xl mx-auto">
-        <p className="text-purple-300 font-semibold">CodeSaathi Instructor Panel</p>
-        <h1 className="text-4xl font-bold mt-2">Instructor Dashboard</h1>
-        <p className="text-slate-300 mt-3">
-          Create courses, quizzes, coding tasks, live classes, and manage learning flow.
-        </p>
+    <main className="page">
+      <section className="container">
+        <div className="card mb-8">
+          <p className="text-purple-300 font-bold">Student Panel</p>
+          <h1 className="section-title mt-2">Student Dashboard</h1>
+          <p className="text-slate-300 mt-3">
+            Start learning, track progress, use AI tools, solve coding tasks,
+            and earn certificates.
+          </p>
 
-        <div className="grid md:grid-cols-3 gap-4 mt-8">
-          <button onClick={loginInstructor} className="bg-blue-600 rounded-xl p-4 font-semibold">
-            Login Instructor
-          </button>
-          <button disabled={!token} onClick={createCourse} className="bg-slate-800 rounded-xl p-4 font-semibold">
-            Create Demo Course
-          </button>
-          <button disabled={!token} onClick={createChallenge} className="bg-slate-800 rounded-xl p-4 font-semibold">
-            Create Coding Challenge
-          </button>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-4 mt-8">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-            <h2 className="text-xl font-bold">Course Management</h2>
-            <p className="text-slate-400 mt-2">Create courses, add lectures, resources, and live sessions.</p>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-            <h2 className="text-xl font-bold">Quiz Workflow</h2>
-            <p className="text-slate-400 mt-2">Create assessments and manage student quiz performance.</p>
-          </div>
-
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
-            <h2 className="text-xl font-bold">Live Classes</h2>
-            <p className="text-slate-400 mt-2">Schedule instructor-led sessions for enrolled students.</p>
+          <div className="grid-auto mt-6">
+            <button onClick={login} className="btn-primary">
+              Login Student
+            </button>
+            <button onClick={loadProgress} disabled={!token} className="btn-dark">
+              View Progress
+            </button>
+            <button onClick={loadXP} disabled={!token} className="btn-purple">
+              View XP
+            </button>
           </div>
         </div>
 
-        <pre className="mt-8 bg-slate-900 border border-slate-800 rounded-2xl p-5 overflow-auto text-green-300 text-sm">
-          {data ? JSON.stringify(data, null, 2) : "Instructor output will appear here."}
+        <div className="grid-auto">
+          <Link href="/courses" className="card">
+            <h2 className="text-2xl font-bold">Courses</h2>
+            <p className="text-slate-400 mt-2">Browse and enroll in courses.</p>
+          </Link>
+
+          <Link href="/coding" className="card">
+            <h2 className="text-2xl font-bold">Coding Lab</h2>
+            <p className="text-slate-400 mt-2">Solve coding challenges.</p>
+          </Link>
+
+          <Link href="/quiz" className="card">
+            <h2 className="text-2xl font-bold">Quiz Center</h2>
+            <p className="text-slate-400 mt-2">Attempt assessments.</p>
+          </Link>
+
+          <Link href="/study-workspace" className="card">
+            <h2 className="text-2xl font-bold">AI Workspace</h2>
+            <p className="text-slate-400 mt-2">Generate notes, quiz, summary.</p>
+          </Link>
+
+          <Link href="/leaderboard" className="card">
+            <h2 className="text-2xl font-bold">Leaderboard</h2>
+            <p className="text-slate-400 mt-2">Track XP and badges.</p>
+          </Link>
+
+          <Link href="/certificates" className="card">
+            <h2 className="text-2xl font-bold">Certificates</h2>
+            <p className="text-slate-400 mt-2">View earned certificates.</p>
+          </Link>
+        </div>
+
+        <pre className="card mt-8 overflow-auto text-green-300 text-sm">
+          {data ? JSON.stringify(data, null, 2) : "Output will appear here."}
         </pre>
       </section>
     </main>
