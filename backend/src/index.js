@@ -17,6 +17,9 @@ const studyWorkspaceRoutes = require("./routes/studyWorkspace.routes");
 const vaultRoutes = require("./routes/vault.routes");
 const aiRoutes = require("./routes/ai.routes");
 
+const leaderboardRoutes = require("./routes/leaderboard.routes");
+const notificationRoutes = require("./routes/notification.routes");
+
 const app = express();
 
 connectDB();
@@ -57,7 +60,8 @@ app.use("/api/quiz", quizRoutes);
 app.use("/api/vault", vaultRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/study-workspace", studyWorkspaceRoutes);
-
+app.use("/api/leaderboard", leaderboardRoutes);
+app.use("/api/notifications", notificationRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
