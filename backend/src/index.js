@@ -11,7 +11,7 @@ const authRoutes = require("./routes/auth.routes");
 
 const courseRoutes = require("./routes/course.routes");
 const liveClassRoutes = require("./routes/liveClass.routes");
-
+const quizRoutes = require("./routes/quiz.routes");
 const codingRoutes = require("./routes/coding.routes");
 
 const app = express();
@@ -50,6 +50,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/live-classes", liveClassRoutes);
 app.use("/api/coding", codingRoutes);
+app.use("/api/quiz", quizRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
