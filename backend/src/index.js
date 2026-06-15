@@ -13,7 +13,7 @@ const courseRoutes = require("./routes/course.routes");
 const liveClassRoutes = require("./routes/liveClass.routes");
 const quizRoutes = require("./routes/quiz.routes");
 const codingRoutes = require("./routes/coding.routes");
-
+const studyWorkspaceRoutes = require("./routes/studyWorkspace.routes");
 const vaultRoutes = require("./routes/vault.routes");
 const aiRoutes = require("./routes/ai.routes");
 
@@ -56,7 +56,7 @@ app.use("/api/coding", codingRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/vault", vaultRoutes);
 app.use("/api/ai", aiRoutes);
-
+app.use("/api/study-workspace", studyWorkspaceRoutes);
 
 const PORT = process.env.PORT || 5000;
 
