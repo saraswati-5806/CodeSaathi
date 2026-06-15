@@ -20,6 +20,9 @@ const aiRoutes = require("./routes/ai.routes");
 const leaderboardRoutes = require("./routes/leaderboard.routes");
 const notificationRoutes = require("./routes/notification.routes");
 
+const certificateRoutes = require("./routes/certificate.routes");
+const progressRoutes = require("./routes/progress.routes");
+
 const app = express();
 
 connectDB();
@@ -62,6 +65,9 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/study-workspace", studyWorkspaceRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/certificates", certificateRoutes);
+app.use("/api/progress", progressRoutes);
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
