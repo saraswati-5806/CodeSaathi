@@ -14,6 +14,9 @@ const liveClassRoutes = require("./routes/liveClass.routes");
 const quizRoutes = require("./routes/quiz.routes");
 const codingRoutes = require("./routes/coding.routes");
 
+const vaultRoutes = require("./routes/vault.routes");
+const aiRoutes = require("./routes/ai.routes");
+
 const app = express();
 
 connectDB();
@@ -51,6 +54,10 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/live-classes", liveClassRoutes);
 app.use("/api/coding", codingRoutes);
 app.use("/api/quiz", quizRoutes);
+app.use("/api/vault", vaultRoutes);
+app.use("/api/ai", aiRoutes);
+
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
