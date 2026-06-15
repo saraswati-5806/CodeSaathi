@@ -1,16 +1,17 @@
 import Link from "next/link";
 
 export default function AppShell({ children }) {
-  const links = [
-    ["Dashboard", "/dashboard"],
-    ["Courses", "/courses"],
-    ["Coding Lab", "/coding"],
-    ["Quiz Center", "/quiz"],
-    ["AI Workspace", "/study-workspace"],
-    ["Leaderboard", "/leaderboard"],
-    ["Certificates", "/certificates"],
-    ["Instructor", "/instructor/dashboard"],
-  ];
+const links = [
+  ["Dashboard", "/dashboard"],
+  ["Courses", "/courses"],
+  ["Learning Workspace", "/learning-workspace"],
+  ["Coding Lab", "/coding"],
+  ["Quiz Center", "/quiz"],
+  ["AI Workspace", "/study-workspace"],
+  ["Leaderboard", "/leaderboard"],
+  ["Certificates", "/certificates"],
+  ["Instructor", "/instructor/dashboard"],
+];
 
   return (
     <div className="app-bg shell">
