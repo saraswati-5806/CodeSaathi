@@ -14,8 +14,9 @@ export default function InstructorDashboard() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: "instructor@codesaathi.com", password: "Instructor@123" }),
     });
+
     const result = await res.json();
-    setToken(result.token);
+    setToken(result.token || "");
     setData(result);
   };
 
@@ -30,6 +31,7 @@ export default function InstructorDashboard() {
         difficulty: "beginner",
       }),
     });
+
     setData(await res.json());
   };
 
@@ -45,6 +47,7 @@ export default function InstructorDashboard() {
         hints: ["Use print/console.log"],
       }),
     });
+
     setData(await res.json());
   };
 
@@ -53,26 +56,36 @@ export default function InstructorDashboard() {
       <section className="max-w-6xl mx-auto">
         <p className="text-purple-300 font-semibold">CodeSaathi Instructor Panel</p>
         <h1 className="text-4xl font-bold mt-2">Instructor Dashboard</h1>
-        <p className="text-slate-300 mt-3">Create courses, coding tasks, quizzes, live classes, and manage learning flow.</p>
+        <p className="text-slate-300 mt-3">
+          Create courses, quizzes, coding tasks, live classes, and manage learning flow.
+        </p>
 
         <div className="grid md:grid-cols-3 gap-4 mt-8">
-          <button onClick={loginInstructor} className="bg-blue-600 rounded-xl p-4 font-semibold">Login Instructor</button>
-          <button disabled={!token} onClick={createCourse} className="bg-slate-800 rounded-xl p-4 font-semibold">Create Demo Course</button>
-          <button disabled={!token} onClick={createChallenge} className="bg-slate-800 rounded-xl p-4 font-semibold">Create Coding Challenge</button>
+          <button onClick={loginInstructor} className="bg-blue-600 rounded-xl p-4 font-semibold">
+            Login Instructor
+          </button>
+          <button disabled={!token} onClick={createCourse} className="bg-slate-800 rounded-xl p-4 font-semibold">
+            Create Demo Course
+          </button>
+          <button disabled={!token} onClick={createChallenge} className="bg-slate-800 rounded-xl p-4 font-semibold">
+            Create Coding Challenge
+          </button>
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 mt-8">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
             <h2 className="text-xl font-bold">Course Management</h2>
-            <p className="text-slate-400 mt-2">Create/edit courses and lectures.</p>
+            <p className="text-slate-400 mt-2">Create courses, add lectures, resources, and live sessions.</p>
           </div>
+
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
             <h2 className="text-xl font-bold">Quiz Workflow</h2>
-            <p className="text-slate-400 mt-2">Instructor-led quiz and assessment creation.</p>
+            <p className="text-slate-400 mt-2">Create assessments and manage student quiz performance.</p>
           </div>
+
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
             <h2 className="text-xl font-bold">Live Classes</h2>
-            <p className="text-slate-400 mt-2">Schedule instructor-led sessions.</p>
+            <p className="text-slate-400 mt-2">Schedule instructor-led sessions for enrolled students.</p>
           </div>
         </div>
 
