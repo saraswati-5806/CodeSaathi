@@ -3,13 +3,14 @@ import Link from "next/link";
 export default function SiteNav() {
   const links = [
     ["Student", "/dashboard"],
-    ["Instructor", "/instructor/dashboard"],
     ["Courses", "/courses"],
+    ["Workspace", "/learning-workspace"],
     ["Coding", "/coding"],
     ["Quiz", "/quiz"],
-    ["AI Workspace", "/study-workspace"],
+    ["AI", "/study-workspace"],
     ["Leaderboard", "/leaderboard"],
     ["Certificates", "/certificates"],
+    ["Instructor", "/instructor/dashboard"],
   ];
 
   return (
@@ -17,12 +18,9 @@ export default function SiteNav() {
       <Link href="/" className="text-3xl font-black text-purple-300">
         CodeSaathi
       </Link>
-
-      <div className="mobile-links">
+      <div className="mobile-links hide-scroll">
         {links.map(([label, href]) => (
-          <Link key={href} href={href}>
-            {label}
-          </Link>
+          <Link key={href} href={href}>{label}</Link>
         ))}
       </div>
     </nav>
