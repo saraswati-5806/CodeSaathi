@@ -9,6 +9,9 @@ const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 
+const courseRoutes = require("./routes/course.routes");
+const liveClassRoutes = require("./routes/liveClass.routes");
+
 const app = express();
 
 connectDB();
@@ -42,7 +45,8 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
-
+app.use("/api/courses", courseRoutes);
+app.use("/api/live-classes", liveClassRoutes);
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
