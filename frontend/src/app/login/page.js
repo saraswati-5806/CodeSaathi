@@ -1,14 +1,10 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-function LoginContent() {
-  const searchParams = useSearchParams();
-  const requestedRole = searchParams.get("role") || "student";
-
+export default function LoginPage() {
   const [role, setRole] = useState("student");
   const [email, setEmail] = useState("student@codesaathi.com");
   const [password, setPassword] = useState("Student@123");
@@ -16,9 +12,6 @@ function LoginContent() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const initialRole = requestedRole === "instructor" ? "instructor" : "student";
-    switchRole(initialRole);
-
     const savedToken = localStorage.getItem("codesaathi_token");
     const savedRole = localStorage.getItem("codesaathi_role");
 
@@ -29,7 +22,7 @@ function LoginContent() {
     if (savedToken && savedRole === "student") {
       window.location.href = "/dashboard";
     }
-  }, [requestedRole]);
+  }, []);
 
   const switchRole = (nextRole) => {
     setRole(nextRole);
@@ -90,6 +83,7 @@ function LoginContent() {
           <div>
             <p className="text-purple-300 font-bold">Welcome to</p>
             <h1 className="hero-title mt-2">CodeSaathi</h1>
+
             <p className="text-slate-300 mt-5 leading-8">
               Login first to access the LMS workspace. Students and instructors
               get different dashboards, navigation menus, and workflows.
@@ -97,6 +91,7 @@ function LoginContent() {
 
             <div className="grid sm:grid-cols-2 gap-4 mt-8">
               <button
+                type="button"
                 className={role === "student" ? "btn-blue" : "btn-dark"}
                 onClick={() => switchRole("student")}
               >
@@ -104,6 +99,7 @@ function LoginContent() {
               </button>
 
               <button
+                type="button"
                 className={role === "instructor" ? "btn-purple" : "btn-dark"}
                 onClick={() => switchRole("instructor")}
               >
@@ -132,7 +128,12 @@ function LoginContent() {
                 onChange={(event) => setPassword(event.target.value)}
               />
 
-              <button onClick={login} disabled={loading} className="btn-blue w-full">
+              <button
+                type="button"
+                onClick={login}
+                disabled={loading}
+                className="btn-blue w-full"
+              >
                 {loading ? "Logging in..." : "Login"}
               </button>
 
@@ -152,19 +153,5 @@ function LoginContent() {
         </div>
       </section>
     </main>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <Suspense
-      fallback={
-        <main className="app-bg min-h-screen flex items-center justify-center px-4">
-          <div className="card">Loading login...</div>
-        </main>
-      }
-    >
-      <LoginContent />
-    </Suspense>
   );
 }
