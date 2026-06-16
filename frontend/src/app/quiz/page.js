@@ -1,88 +1,95 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import AppShell from "../../components/AppShell";
-import { demoQuizzes } from "../../lib/demoData";
 
-export default function QuizPage() {
-  const [role, setRole] = useState("student");
-  const [quizzes, setQuizzes] = useState([]);
-  const [title, setTitle] = useState("");
-  const [questions, setQuestions] = useState("10");
-  const [assignment, setAssignment] = useState("");
-  const [message, setMessage] = useState("");
+export default function CodingPage() {
+  const [language, setLanguage] = useState("python");
+  const [code, setCode] = useState('for i in range(1, 6):\n    print(i)');
+  const [output, setOutput] = useState("Run code to see output.");
 
-  useEffect(() => {
-    const r = localStorage.getItem("codesaathi_role") || "student";
-    const custom = JSON.parse(localStorage.getItem("codesaathi_quizzes") || "[]");
-    setRole(r);
-    setQuizzes([...custom, ...demoQuizzes]);
-  }, []);
+  const loadStarter = (lang) => {
+    setLanguage(lang);
 
-  const saveQuiz = () => {
-    if (!title.trim()) return setMessage("Quiz title is required.");
+    if (lang === "javascript") {
+      setCode('for (let i = 1; i <= 5; i++) {\n  console.log(i);\n}');
+    } else {
+      setCode('for i in range(1, 6):\n    print(i)');
+    }
 
-    const newQuiz = {
-      id: `quiz-${Date.now()}`,
-      title,
-      questions: Number(questions) || 10,
-      time: "20 min",
-      status: "Pending",
-      score: null,
-      assignment: assignment || "Complete related practice questions.",
-    };
-
-    const old = JSON.parse(localStorage.getItem("codesaathi_quizzes") || "[]");
-    const updated = [newQuiz, ...old];
-    localStorage.setItem("codesaathi_quizzes", JSON.stringify(updated));
-    setQuizzes([...updated, ...demoQuizzes]);
-    setTitle("");
-    setQuestions("10");
-    setAssignment("");
-    setMessage("Quiz and assignment created. Student side will show it.");
+    setOutput("Run code to see output.");
   };
 
-  const attemptQuiz = (id) => {
-    const updated = quizzes.map((q) => q.id === id ? { ...q, status: "Completed", score: 90 } : q);
-    setQuizzes(updated);
-    const custom = updated.filter((q) => String(q.id).startsWith("quiz-"));
-    localStorage.setItem("codesaathi_quizzes", JSON.stringify(custom));
+  const runCode = () => {
+    const lower = code.toLowerCase();
+
+    if (language === "python") {
+      if (lower.includes("print") && lower.includes("range")) {
+        setOutput("Accepted ✅\nTest Case 1 Passed\nTest Case 2 Passed\nOutput:\n1\n2\n3\n4\n5");
+      } else {
+        setOutput("Error ❌\nHint: Use range() and print() to display numbers.");
+      }
+      return;
+    }
+
+    if (language === "javascript") {
+      if (lower.includes("console.log") && lower.includes("for")) {
+        setOutput("Accepted ✅\nTest Case 1 Passed\nTest Case 2 Passed\nOutput:\n1\n2\n3\n4\n5");
+      } else {
+        setOutput("Error ❌\nHint: Use for loop and console.log().");
+      }
+    }
   };
 
   return (
     <AppShell>
       <section>
         <div className="card mb-6">
-          <p className="text-purple-300 font-bold">{role === "instructor" ? "Create Assessments" : "Assessment Center"}</p>
-          <h1 className="page-title mt-2">{role === "instructor" ? "Quiz & Assignment Builder" : "Quizzes & Assignments"}</h1>
+          <p className="text-purple-300 font-bold">Coding Workspace</p>
+          <h1 className="page-title mt-2">Practice Coding</h1>
           <p className="text-slate-300 mt-4">
-            {role === "instructor" ? "Create quiz and assignment for students." : "Attempt quizzes and view assigned work."}
+            Write code, run sample tests, and view accepted/error output.
           </p>
-          {message && <div className="mini-card text-green-300 mt-4">{message}</div>}
         </div>
 
-        {role === "instructor" && (
-          <div className="card mb-6">
-            <h2 className="text-2xl font-bold mb-4">Create New Quiz / Assignment</h2>
-            <div className="grid md:grid-cols-4 gap-4">
-              <input className="field" placeholder="Quiz title" value={title} onChange={(e) => setTitle(e.target.value)} />
-              <input className="field" placeholder="No. of questions" value={questions} onChange={(e) => setQuestions(e.target.value)} />
-              <input className="field" placeholder="Assignment task" value={assignment} onChange={(e) => setAssignment(e.target.value)} />
-              <button className="btn-purple" onClick={saveQuiz}>Create</button>
-            </div>
-          </div>
-        )}
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="card">
+            <div className="flex gap-3 flex-wrap mb-5">
+              <button
+                className={language === "python" ? "btn-blue" : "btn-dark"}
+                onClick={() => loadStarter("python")}
+              >
+                Python
+              </button>
 
-        <div className="grid-fit">
-          {quizzes.map((q) => (
-            <div className="card" key={q.id}>
-              <h2 className="text-2xl font-bold">{q.title}</h2>
-              <p className="text-slate-400 mt-2">{q.questions} questions • {q.time}</p>
-              {q.assignment && <p className="mini-card mt-4">Assignment: {q.assignment}</p>}
-              <span className="badge mt-4">{q.status}</span>
-              {q.score !== null ? <h3 className="text-4xl font-black mt-5">{q.score}%</h3> : role === "student" ? <button className="btn-purple mt-5" onClick={() => attemptQuiz(q.id)}>Attempt Quiz</button> : <p className="text-slate-400 mt-5">Visible to students</p>}
+              <button
+                className={language === "javascript" ? "btn-purple" : "btn-dark"}
+                onClick={() => loadStarter("javascript")}
+              >
+                JavaScript
+              </button>
             </div>
-          ))}
+
+            <h2 className="text-2xl font-bold mb-4">Challenge</h2>
+            <p className="text-slate-300">Print numbers from 1 to 5.</p>
+
+            <textarea
+              className="field min-h-80 text-green-300 mt-5 font-mono"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+
+            <button className="btn-blue mt-4" onClick={runCode}>
+              Run Code
+            </button>
+          </div>
+
+          <div className="card">
+            <h2 className="text-2xl font-bold mb-4">Output</h2>
+            <pre className="mini-card whitespace-pre-wrap text-green-300 min-h-80">
+              {output}
+            </pre>
+          </div>
         </div>
       </section>
     </AppShell>

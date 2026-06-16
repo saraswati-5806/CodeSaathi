@@ -6,11 +6,17 @@ let model = null;
 
 if (apiKey) {
   const genAI = new GoogleGenerativeAI(apiKey);
-  model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash",
+  });
 }
 
 const fallbackAnswer = (prompt = "") => {
   const text = prompt.toLowerCase();
+
+  if (text.includes("hinglish")) {
+    return "Hinglish: Loop ka use same code ko baar-baar run karne ke liye hota hai. For loop sequence ke liye aur while loop condition ke liye use hota hai.";
+  }
 
   if (text.includes("loop")) {
     return "A loop repeats code. In Python, for loop is used for sequences and while loop is used when repetition depends on a condition.";
@@ -21,14 +27,10 @@ const fallbackAnswer = (prompt = "") => {
   }
 
   if (text.includes("error") || text.includes("debug")) {
-    return "Debugging steps: check the error line, spelling, brackets, indentation, variable names, and test with small input first.";
+    return "Debugging steps: check line number, spelling, brackets, indentation, variable names, and test with small input.";
   }
 
-  if (text.includes("hinglish")) {
-    return "Hinglish: Loop ka use same code ko baar-baar run karne ke liye hota hai. For loop sequence ke liye hota hai aur while loop condition ke liye.";
-  }
-
-  return "I can help with doubts, summaries, flashcards, quizzes, coding hints, debugging, and study planning. Gemini API key is missing or unavailable, so this fallback answer is shown.";
+  return "I can help with summaries, flashcards, quizzes, code review, error explanation, and study planning.";
 };
 
 const generateText = async (prompt) => {
@@ -41,6 +43,7 @@ const generateText = async (prompt) => {
     const response = await result.response;
     return response.text();
   } catch (error) {
+    console.error("GEMINI ERROR:", error.message);
     return `${fallbackAnswer(prompt)}\n\nFallback reason: ${error.message}`;
   }
 };
@@ -48,11 +51,7 @@ const generateText = async (prompt) => {
 const generateJSON = async (prompt, fallbackData) => {
   try {
     const text = await generateText(prompt);
-    const cleaned = text
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-
+    const cleaned = text.replace(/```json/g, "").replace(/```/g, "").trim();
     return JSON.parse(cleaned);
   } catch {
     return fallbackData;

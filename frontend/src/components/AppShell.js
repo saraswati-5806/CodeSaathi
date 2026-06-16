@@ -30,7 +30,8 @@ export default function AppShell({ children }) {
 
     const savedTheme = localStorage.getItem("codesaathi_theme") || "dark";
     const savedLang = localStorage.getItem("codesaathi_lang") || "en";
-    const savedCollapsed = localStorage.getItem("codesaathi_sidebar") === "collapsed";
+    const savedCollapsed =
+      localStorage.getItem("codesaathi_sidebar") === "collapsed";
 
     setRole(savedRole);
     setTheme(savedTheme);
@@ -127,7 +128,7 @@ export default function AppShell({ children }) {
         ["Instructor Dashboard", "/instructor/dashboard"],
         ["Manage Courses", "/courses"],
         ["Create Assessments", "/quiz"],
-        ["Resources", "/instructor/dashboard"],
+        ["Resources", "/resources"],
       ];
     }
 
@@ -135,6 +136,7 @@ export default function AppShell({ children }) {
       [t.dashboard, "/dashboard"],
       [t.courses, "/courses"],
       [t.workspace, "/learning-workspace"],
+      ["Resources", "/resources"],
       [t.coding, "/coding"],
       [t.quiz, "/quiz"],
       [t.leaderboard, "/leaderboard"],
@@ -147,11 +149,17 @@ export default function AppShell({ children }) {
       <aside className="sidebar">
         <div className="flex items-center justify-between gap-3 mb-6">
           {!collapsed && (
-            <Link href={role === "instructor" ? "/instructor/dashboard" : "/dashboard"} className="text-3xl font-black text-purple-300">
+            <Link
+              href={role === "instructor" ? "/instructor/dashboard" : "/dashboard"}
+              className="text-3xl font-black text-purple-300"
+            >
               CodeSaathi
             </Link>
           )}
-          <button className="icon-btn" onClick={toggleSidebar}>{collapsed ? "☰" : "←"}</button>
+
+          <button className="icon-btn" onClick={toggleSidebar}>
+            {collapsed ? "☰" : "←"}
+          </button>
         </div>
 
         {!collapsed && (
@@ -180,7 +188,11 @@ export default function AppShell({ children }) {
           </div>
 
           <div className="top-actions">
-            <select className="top-select" value={lang} onChange={(e) => saveLang(e.target.value)}>
+            <select
+              className="top-select"
+              value={lang}
+              onChange={(e) => saveLang(e.target.value)}
+            >
               <option value="en">English</option>
               <option value="hinglish">Hinglish</option>
               <option value="hi">Hindi</option>
@@ -188,10 +200,27 @@ export default function AppShell({ children }) {
               <option value="od">Odia</option>
             </select>
 
-            <button className="icon-btn" onClick={toggleTheme}>{theme === "dark" ? "☀" : "🌙"}</button>
-            <button className="icon-btn" onClick={() => setShowNotifications(!showNotifications)}>🔔</button>
-            <button className="icon-btn" onClick={() => setShowAssistant(!showAssistant)}>🤖</button>
-            <button className="icon-btn" onClick={logout}>🚪</button>
+            <button className="icon-btn" onClick={toggleTheme}>
+              {theme === "dark" ? "☀" : "🌙"}
+            </button>
+
+            <button
+              className="icon-btn"
+              onClick={() => setShowNotifications(!showNotifications)}
+            >
+              🔔
+            </button>
+
+            <button
+              className="icon-btn"
+              onClick={() => setShowAssistant(!showAssistant)}
+            >
+              🤖
+            </button>
+
+            <button className="icon-btn" onClick={logout}>
+              🚪
+            </button>
           </div>
         </header>
 
@@ -199,13 +228,21 @@ export default function AppShell({ children }) {
           <div className="card mb-5">
             <h3 className="font-bold mb-3">Notifications</h3>
             <div className="grid-fit">
-              {demoNotifications.map((n) => <div className="mini-card" key={n}>{n}</div>)}
+              {demoNotifications.map((n) => (
+                <div className="mini-card" key={n}>
+                  {n}
+                </div>
+              ))}
             </div>
           </div>
         )}
 
         <div className="mobile-links">
-          {links.map(([label, href]) => <Link key={label} href={href}>{label}</Link>)}
+          {links.map(([label, href]) => (
+            <Link key={label} href={href}>
+              {label}
+            </Link>
+          ))}
         </div>
 
         {children}
@@ -215,7 +252,9 @@ export default function AppShell({ children }) {
         <div className="ai-panel card">
           <div className="flex justify-between items-center gap-3">
             <h2 className="text-xl font-bold">AI Assistant</h2>
-            <button className="icon-btn" onClick={() => setShowAssistant(false)}>×</button>
+            <button className="icon-btn" onClick={() => setShowAssistant(false)}>
+              ×
+            </button>
           </div>
 
           <p className="text-slate-400 mt-2">Language: {lang}</p>
@@ -226,19 +265,51 @@ export default function AppShell({ children }) {
                 {m.text}
               </div>
             ))}
+
             {loadingAI && <div className="ai-msg">Thinking...</div>}
           </div>
 
           <div className="grid grid-cols-2 gap-2 mt-4">
-            <button className="btn-dark" onClick={() => sendAssistantMessage("Explain Python loops")}>Explain</button>
-            <button className="btn-dark" onClick={() => sendAssistantMessage("Generate quiz")}>Quiz</button>
-            <button className="btn-dark" onClick={() => sendAssistantMessage("Review this code")}>Review</button>
-            <button className="btn-dark" onClick={() => sendAssistantMessage("Give study plan")}>Plan</button>
+            <button
+              className="btn-dark"
+              onClick={() => sendAssistantMessage("Explain Python loops")}
+            >
+              Explain
+            </button>
+
+            <button
+              className="btn-dark"
+              onClick={() => sendAssistantMessage("Generate quiz")}
+            >
+              Quiz
+            </button>
+
+            <button
+              className="btn-dark"
+              onClick={() => sendAssistantMessage("Review this code")}
+            >
+              Review
+            </button>
+
+            <button
+              className="btn-dark"
+              onClick={() => sendAssistantMessage("Give study plan")}
+            >
+              Plan
+            </button>
           </div>
 
           <div className="flex gap-2 mt-4">
-            <input className="field" value={assistantInput} onChange={(e) => setAssistantInput(e.target.value)} placeholder="Ask AI..." />
-            <button className="btn-purple" onClick={() => sendAssistantMessage()}>Send</button>
+            <input
+              className="field"
+              value={assistantInput}
+              onChange={(e) => setAssistantInput(e.target.value)}
+              placeholder="Ask AI..."
+            />
+
+            <button className="btn-purple" onClick={() => sendAssistantMessage()}>
+              Send
+            </button>
           </div>
         </div>
       )}
