@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { demoNotifications, translations } from "../lib/demoData";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -23,10 +23,18 @@ export default function AppShell({ children }) {
   ]);
 
   useEffect(() => {
+    const token = localStorage.getItem("codesaathi_token");
     const savedRole = localStorage.getItem("codesaathi_role") || "guest";
+
+    if (!token || savedRole === "guest") {
+      window.location.href = "/login";
+      return;
+    }
+
     const savedLang = localStorage.getItem("codesaathi_lang") || "en";
     const savedTheme = localStorage.getItem("codesaathi_theme") || "dark";
-    const savedCollapsed = localStorage.getItem("codesaathi_sidebar") === "collapsed";
+    const savedCollapsed =
+      localStorage.getItem("codesaathi_sidebar") === "collapsed";
 
     setRole(savedRole);
     setLang(savedLang);
@@ -57,27 +65,24 @@ export default function AppShell({ children }) {
     localStorage.removeItem("codesaathi_role");
     localStorage.removeItem("codesaathi_token");
     localStorage.removeItem("codesaathi_user");
-    setRole("guest");
-    window.location.href = "/";
+    window.location.href = "/login";
   };
 
   const fallbackAnswer = (question) => {
     const q = question.toLowerCase();
 
     if (q.includes("loop")) {
-      return "A loop repeats code. In Python, use for loop for sequences and while loop when repetition depends on a condition.";
+      return lang === "hinglish"
+        ? "Loop ka use same code ko baar-baar run karne ke liye hota hai. For loop sequence ke liye aur while loop condition ke liye use hota hai."
+        : "A loop repeats code. In Python, use a for loop for sequences and a while loop when repetition depends on a condition.";
     }
 
     if (q.includes("quiz")) {
-      return "Practice Quiz: 1) What is a variable? 2) Which keyword prints output in Python? 3) What does a loop do?";
+      return "Practice Quiz:\n1. What is a variable?\n2. Which keyword prints output in Python?\n3. What is the use of a loop?";
     }
 
     if (q.includes("debug") || q.includes("error")) {
-      return "Debugging tip: check line number, spelling, brackets, indentation and variable names.";
-    }
-
-    if (q.includes("hinglish")) {
-      return "Hinglish: Loop ka use same code ko baar-baar run karne ke liye hota hai.";
+      return "Debugging tip: check the line number, spelling, brackets, indentation and variable names.";
     }
 
     return "I can help with doubts, summaries, flashcards, quizzes, coding hints and study planning.";
@@ -87,8 +92,7 @@ export default function AppShell({ children }) {
     const text = textFromButton || assistantInput.trim();
     if (!text) return;
 
-    const userMessage = { from: "user", text };
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((prev) => [...prev, { from: "user", text }]);
     setAssistantInput("");
     setLoadingAI(true);
 
@@ -96,8 +100,16 @@ export default function AppShell({ children }) {
       const token = localStorage.getItem("codesaathi_token");
 
       if (!token) {
-        throw new Error("Login token missing. Showing demo AI answer.");
+        throw new Error("Login token missing.");
       }
+
+      const languageMap = {
+        en: "English",
+        hinglish: "Hinglish",
+        hi: "Hindi",
+        mr: "Marathi",
+        od: "Odia",
+      };
 
       const response = await fetch(`${API_URL}/api/ai/chat`, {
         method: "POST",
@@ -106,8 +118,8 @@ export default function AppShell({ children }) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          question: text,
-          language: lang === "hinglish" ? "Hinglish" : lang,
+          question: `${text}\n\nImportant: Answer in ${languageMap[lang] || "English"}.`,
+          language: languageMap[lang] || "English",
           mode: "global-assistant",
         }),
       });
@@ -120,18 +132,12 @@ export default function AppShell({ children }) {
 
       setMessages((prev) => [
         ...prev,
-        {
-          from: "ai",
-          text: data.answer || "AI response received.",
-        },
+        { from: "ai", text: data.answer || "AI response received." },
       ]);
     } catch (error) {
       setMessages((prev) => [
         ...prev,
-        {
-          from: "ai",
-          text: `${fallbackAnswer(text)}\n\nNote: ${error.message}`,
-        },
+        { from: "ai", text: `${fallbackAnswer(text)}\n\nNote: ${error.message}` },
       ]);
     } finally {
       setLoadingAI(false);
@@ -140,16 +146,29 @@ export default function AppShell({ children }) {
 
   const t = translations[lang] || translations.en;
 
-  const links = [
-    [t.dashboard, "/dashboard"],
-    [t.courses, "/courses"],
-    [t.workspace, "/learning-workspace"],
-    [t.coding, "/coding"],
-    [t.quiz, "/quiz"],
-    [t.leaderboard, "/leaderboard"],
-    [t.certificates, "/certificates"],
-    [t.instructor, "/instructor/dashboard"],
-  ];
+  const links = useMemo(() => {
+    const studentLinks = [
+      [t.dashboard, "/dashboard"],
+      [t.courses, "/courses"],
+      [t.workspace, "/learning-workspace"],
+      [t.coding, "/coding"],
+      [t.quiz, "/quiz"],
+      [t.leaderboard, "/leaderboard"],
+      [t.certificates, "/certificates"],
+    ];
+
+    const instructorLinks = [
+      ["Instructor Dashboard", "/instructor/dashboard"],
+      ["Manage Courses", "/courses"],
+      ["Assessments", "/quiz"],
+      ["Resources", "/instructor/dashboard"],
+      ["Analytics", "/instructor/dashboard"],
+    ];
+
+    return role === "instructor" ? instructorLinks : studentLinks;
+  }, [role, t]);
+
+  const pageTitle = role === "instructor" ? "Instructor Workspace" : "Student Workspace";
 
   return (
     <div className={`app-bg shell ${collapsed ? "shell-collapsed" : ""}`}>
@@ -175,7 +194,7 @@ export default function AppShell({ children }) {
 
         <div className="space-y-3">
           {links.map(([label, href]) => (
-            <Link key={href} href={href} className="nav-link" title={label}>
+            <Link key={`${label}-${href}`} href={href} className="nav-link" title={label}>
               <span>{collapsed ? label.charAt(0) : label}</span>
             </Link>
           ))}
@@ -188,7 +207,7 @@ export default function AppShell({ children }) {
             <button onClick={toggleSidebar} className="icon-btn desktop-hidden">
               ☰
             </button>
-            <h2 className="text-2xl font-black text-purple-300">CodeSaathi</h2>
+            <h2 className="text-2xl font-black text-purple-300">{pageTitle}</h2>
             <p className="text-sm text-slate-400 capitalize">Role: {role}</p>
           </div>
 
@@ -226,11 +245,9 @@ export default function AppShell({ children }) {
               🤖
             </button>
 
-            {role !== "guest" && (
-              <button onClick={logout} className="icon-btn" title="Logout">
-                🚪
-              </button>
-            )}
+            <button onClick={logout} className="icon-btn" title="Logout">
+              🚪
+            </button>
           </div>
         </header>
 
@@ -249,7 +266,7 @@ export default function AppShell({ children }) {
 
         <div className="mobile-links">
           {links.map(([label, href]) => (
-            <Link key={href} href={href}>
+            <Link key={`${label}-${href}`} href={href}>
               {label}
             </Link>
           ))}
@@ -272,7 +289,8 @@ export default function AppShell({ children }) {
           </div>
 
           <p className="text-slate-400 mt-3">
-            Ask doubts, coding errors, quiz help, or learning recommendations.
+            Current AI language:{" "}
+            <b>{lang === "hinglish" ? "Hinglish" : lang.toUpperCase()}</b>
           </p>
 
           <div className="assistant-chat mt-4">
@@ -291,7 +309,13 @@ export default function AppShell({ children }) {
           <div className="grid grid-cols-2 gap-2 mt-4">
             <button
               className="btn-dark"
-              onClick={() => sendAssistantMessage("Explain Python loops in Hinglish")}
+              onClick={() =>
+                sendAssistantMessage(
+                  lang === "hinglish"
+                    ? "Explain Python loops in Hinglish"
+                    : "Explain Python loops"
+                )
+              }
             >
               Explain Loops
             </button>
