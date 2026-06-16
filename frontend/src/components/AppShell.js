@@ -16,7 +16,10 @@ export default function AppShell({ children }) {
   const [assistantInput, setAssistantInput] = useState("");
   const [loadingAI, setLoadingAI] = useState(false);
   const [messages, setMessages] = useState([
-    { from: "ai", text: "Hi! I am CodeSaathi AI Assistant. Ask me anything." },
+    {
+      from: "ai",
+      text: "Hi! I am your CodeSaathi AI Assistant. I can explain topics, generate quiz ideas, review code, debug errors, create study plans, and answer in English, Hindi, Marathi, Odia, or Hinglish.",
+    },
   ]);
 
   useEffect(() => {
@@ -65,6 +68,38 @@ export default function AppShell({ children }) {
     localStorage.setItem("codesaathi_sidebar", next ? "collapsed" : "expanded");
   };
 
+  const localAI = (text) => {
+    const lower = text.toLowerCase();
+
+    if (lang === "hinglish") {
+      if (lower.includes("loop")) {
+        return "Hinglish Explanation: Loop ka use same code ko baar-baar run karne ke liye hota hai. Python mein `for loop` sequence ke liye aur `while loop` condition ke basis par repeat karne ke liye use hota hai.";
+      }
+      if (lower.includes("quiz")) {
+        return "Hinglish Quiz:\n1. Variable kya hota hai?\n2. Python mein output ke liye kaunsa keyword use hota hai?\n3. Loop ka use kya hai?\n4. Function ka benefit kya hai?";
+      }
+      return "Hinglish Mode Active: Aap mujhe doubt, code error, quiz, summary, ya study plan ke liye puch sakte ho.";
+    }
+
+    if (lower.includes("quiz")) {
+      return "Generated Quiz Ideas:\n1. What is a variable?\n2. Which keyword prints output in Python?\n3. What is the purpose of a loop?\n4. What is a function?\n5. What is an array/list?";
+    }
+
+    if (lower.includes("review") || lower.includes("code")) {
+      return "Code Review Tips:\n1. Check syntax.\n2. Use meaningful variable names.\n3. Keep code readable.\n4. Test with small inputs.\n5. Handle errors clearly.";
+    }
+
+    if (lower.includes("debug") || lower.includes("error")) {
+      return "Debugging Steps:\n1. Read the exact error message.\n2. Check line number.\n3. Check brackets and indentation.\n4. Check variable spelling.\n5. Run small test cases.";
+    }
+
+    if (lower.includes("plan")) {
+      return "Study Plan:\nDay 1: Revise concepts.\nDay 2: Practice coding.\nDay 3: Attempt quiz.\nDay 4: Review mistakes.\nDay 5: Build mini project.";
+    }
+
+    return "I can help with explanations, quiz generation, code review, error explanation, summaries, flashcards, and study planning.";
+  };
+
   const sendAssistantMessage = async (preset = "") => {
     const text = preset || assistantInput.trim();
     if (!text) return;
@@ -103,18 +138,12 @@ export default function AppShell({ children }) {
         throw new Error(data.message || "AI failed");
       }
 
-      setMessages((prev) => [...prev, { from: "ai", text: data.answer }]);
-    } catch {
       setMessages((prev) => [
         ...prev,
-        {
-          from: "ai",
-          text:
-            lang === "hinglish"
-              ? "Demo AI: Main aapko simple Hinglish mein explain kar sakta hoon. Loop same code ko baar-baar run karta hai."
-              : "Demo AI: I can explain concepts, generate quizzes, review code, and suggest study plans.",
-        },
+        { from: "ai", text: data.answer || localAI(text) },
       ]);
+    } catch {
+      setMessages((prev) => [...prev, { from: "ai", text: localAI(text) }]);
     } finally {
       setLoadingAI(false);
     }
@@ -125,10 +154,11 @@ export default function AppShell({ children }) {
   const links = useMemo(() => {
     if (role === "instructor") {
       return [
-        ["Instructor Dashboard", "/instructor/dashboard"],
-        ["Manage Courses", "/courses"],
-        ["Create Assessments", "/quiz"],
+        ["Dashboard", "/instructor/dashboard"],
+        ["Courses", "/courses"],
+        ["Assessments", "/quiz"],
         ["Resources", "/resources"],
+        ["Coding", "/coding"],
       ];
     }
 
@@ -149,12 +179,12 @@ export default function AppShell({ children }) {
       <aside className="sidebar">
         <div className="flex items-center justify-between gap-3 mb-6">
           {!collapsed && (
-            <Link
-              href={role === "instructor" ? "/instructor/dashboard" : "/dashboard"}
-              className="text-3xl font-black text-purple-300"
-            >
-              CodeSaathi
-            </Link>
+            <div>
+              <p className="text-sm text-slate-400">CodeSaathi</p>
+              <h2 className="text-xl font-black text-purple-300 capitalize">
+                {role} Panel
+              </h2>
+            </div>
           )}
 
           <button className="icon-btn" onClick={toggleSidebar}>
@@ -184,7 +214,7 @@ export default function AppShell({ children }) {
             <h2 className="text-2xl font-black text-purple-300">
               {role === "instructor" ? "Instructor Workspace" : "Student Workspace"}
             </h2>
-            <p className="text-sm text-slate-400">CodeSaathi LMS</p>
+            <p className="text-sm text-slate-400">AI-Powered LMS Dashboard</p>
           </div>
 
           <div className="top-actions">
@@ -248,6 +278,14 @@ export default function AppShell({ children }) {
         {children}
       </main>
 
+      <button
+        className="ai-float"
+        onClick={() => setShowAssistant(true)}
+        title="Open AI Assistant"
+      >
+        🤖
+      </button>
+
       {showAssistant && (
         <div className="ai-panel card">
           <div className="flex justify-between items-center gap-3">
@@ -279,7 +317,7 @@ export default function AppShell({ children }) {
 
             <button
               className="btn-dark"
-              onClick={() => sendAssistantMessage("Generate quiz")}
+              onClick={() => sendAssistantMessage("Generate quiz with 10 questions")}
             >
               Quiz
             </button>
@@ -305,6 +343,9 @@ export default function AppShell({ children }) {
               value={assistantInput}
               onChange={(e) => setAssistantInput(e.target.value)}
               placeholder="Ask AI..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter") sendAssistantMessage();
+              }}
             />
 
             <button className="btn-purple" onClick={() => sendAssistantMessage()}>
