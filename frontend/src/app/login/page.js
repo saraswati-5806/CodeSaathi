@@ -1,2 +1,1 @@
-import Link from "next/link";
-export default function LoginPage(){return <main className="app-bg min-h-screen p-6"><section className="container"><div className="card max-w-3xl mx-auto mt-10"><h1 className="page-title">Choose Login</h1><p className="text-slate-400 mt-3">Use demo login from the dashboards.</p><div className="grid sm:grid-cols-2 gap-4 mt-8"><Link href="/dashboard" className="btn-blue">Student Login</Link><Link href="/instructor/dashboard" className="btn-purple">Instructor Login</Link></div></div></section></main>}
+export { default } from "../page";
