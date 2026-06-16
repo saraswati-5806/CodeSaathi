@@ -136,13 +136,10 @@ The project architecture has been prepared for future enterprise-scale upgrades 
 ## Live Demo
 
 Frontend:
-[Add Vercel URL]
+https://code-saathi-eight.vercel.app
 
 Backend:
-[Add Render URL]
-
-Demo Video:
-[Add Demo Video Link]
+https://codesaathi-fovd.onrender.com
 
 ---
 
