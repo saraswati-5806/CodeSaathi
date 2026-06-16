@@ -2,16 +2,79 @@
 
 import { useEffect, useState } from "react";
 import AppShell from "../../components/AppShell";
-import { demoCertificates } from "../../lib/demoData";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function CertificatesPage() {
   const [role, setRole] = useState("student");
+  const [token, setToken] = useState("");
+  const [certificates, setCertificates] = useState([]);
+  const [courseId, setCourseId] = useState("demo-course");
+  const [courseTitle, setCourseTitle] = useState("Python Programming Foundations");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    setRole(localStorage.getItem("codesaathi_role") || "student");
+    const savedRole = localStorage.getItem("codesaathi_role") || "student";
+    const savedToken = localStorage.getItem("codesaathi_token") || "";
+
+    setRole(savedRole);
+    setToken(savedToken);
+
+    if (savedRole === "student") {
+      loadCertificates(savedToken);
+    }
   }, []);
 
+  const authHeaders = (savedToken = token) => ({
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${savedToken}`,
+  });
+
+  const loadCertificates = async (savedToken = token) => {
+    try {
+      const res = await fetch(`${API_URL}/api/certificates/my`, {
+        headers: {
+          Authorization: `Bearer ${savedToken}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setCertificates(data.certificates || []);
+      }
+    } catch {
+      setMessage("Certificates could not be loaded.");
+    }
+  };
+
+  const issueCertificate = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/certificates/issue`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          courseId,
+          courseTitle,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || data.error || "Certificate issue failed");
+      }
+
+      setMessage("Certificate issued and saved in MongoDB.");
+      loadCertificates(token);
+    } catch (error) {
+      setMessage(error.message);
+    }
+  };
+
   const downloadCertificate = (certificate) => {
+    const certCode = certificate.certificateCode || certificate._id || "CERT-DEMO";
+
     const content = `
 <!DOCTYPE html>
 <html>
@@ -28,11 +91,11 @@ export default function CertificatesPage() {
     <h1>CodeSaathi Certificate</h1>
     <h2>Certificate of Completion</h2>
     <p>Awarded to</p>
-    <h2>${certificate.learner}</h2>
+    <h2>CodeSaathi Learner</h2>
     <p>For successfully completing</p>
-    <h2>${certificate.title}</h2>
-    <p>Certificate ID: ${certificate.id}</p>
-    <p>Status: ${certificate.status}</p>
+    <h2>${certificate.courseTitle || courseTitle}</h2>
+    <p>Certificate ID: ${certCode}</p>
+    <p>Status: Verified</p>
   </div>
 </body>
 </html>
@@ -43,11 +106,10 @@ export default function CertificatesPage() {
     const a = document.createElement("a");
 
     a.href = url;
-    a.download = `${certificate.id}-certificate.html`;
+    a.download = `${certCode}-certificate.html`;
     document.body.appendChild(a);
     a.click();
     a.remove();
-
     URL.revokeObjectURL(url);
   };
 
@@ -55,9 +117,9 @@ export default function CertificatesPage() {
     return (
       <AppShell>
         <div className="card">
-          <h1 className="page-title">Certificates</h1>
+          <h1 className="page-title">Certificate Center</h1>
           <p className="text-slate-300 mt-4">
-            Certificates are downloadable from the student dashboard after course completion.
+            Certificates are issued to students after completion. Instructors can monitor them from analytics.
           </p>
         </div>
       </AppShell>
@@ -70,38 +132,44 @@ export default function CertificatesPage() {
         <div className="card mb-6">
           <p className="text-purple-300 font-bold">Certificate Center</p>
           <h1 className="page-title mt-2">Verified Certificates</h1>
+          <p className="text-slate-300 mt-4">
+            Issue, verify and download course completion certificates.
+          </p>
+
+          {message && <div className="mini-card mt-4 text-green-300">{message}</div>}
+        </div>
+
+        <div className="card mb-6">
+          <h2 className="text-2xl font-bold mb-4">Issue Demo Certificate</h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            <input className="field" value={courseId} onChange={(e) => setCourseId(e.target.value)} />
+            <input
+              className="field"
+              value={courseTitle}
+              onChange={(e) => setCourseTitle(e.target.value)}
+            />
+            <button className="btn-purple" onClick={issueCertificate}>
+              Issue Certificate
+            </button>
+          </div>
         </div>
 
         <div className="grid-fit">
-          {demoCertificates.map((certificate) => (
+          {certificates.length === 0 && (
+            <div className="card">No certificates yet. Click Issue Certificate.</div>
+          )}
+
+          {certificates.map((certificate) => (
             <div
-              key={certificate.id}
+              key={certificate._id}
               className="bg-white text-slate-950 rounded-3xl p-8 border-8 border-purple-500"
             >
               <p className="font-bold text-purple-700">CodeSaathi Certificate</p>
-              <h2 className="text-3xl font-black mt-5">
-                Certificate of Completion
-              </h2>
-
-              <p className="mt-5">
-                Awarded to <b>{certificate.learner}</b>
-              </p>
-
-              <p className="mt-3">
-                For completing <b>{certificate.title}</b>
-              </p>
-
-              <p className="mt-5">
-                Certificate ID: <b>{certificate.id}</b>
-              </p>
-
-              <p>
-                Status: <b>{certificate.status}</b>
-              </p>
-
-              <div className="mt-6 border-2 border-slate-900 w-28 h-28 flex items-center justify-center text-xs font-bold">
-                QR VERIFY
-              </div>
+              <h2 className="text-3xl font-black mt-5">Certificate of Completion</h2>
+              <p className="mt-5">Awarded to <b>CodeSaathi Learner</b></p>
+              <p className="mt-3">For completing <b>{certificate.courseTitle}</b></p>
+              <p className="mt-5">Certificate ID: <b>{certificate.certificateCode}</b></p>
+              <p>Status: <b>Verified</b></p>
 
               <button
                 className="mt-6 bg-purple-700 text-white px-5 py-3 rounded-xl font-bold"
