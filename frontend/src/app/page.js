@@ -1,10 +1,53 @@
-"use client";
 import Link from "next/link";
-import { useState } from "react";
 
-export default function Home(){
- const [role,setRole]=useState(typeof window!=="undefined"?localStorage.getItem("codesaathi_role")||"guest":"guest");
- const login=(r)=>{localStorage.setItem("codesaathi_role",r);localStorage.setItem("codesaathi_token","demo-token");setRole(r);window.location.href=r==="instructor"?"/instructor/dashboard":"/dashboard"};
- const features=["Course learning path","Video lectures with notes","AI summary and flashcards","Coding challenges","Quiz workflow","Progress analytics","Certificate center","Leaderboard and badges","Language switcher"];
- return <main className="app-bg min-h-screen"><section className="max-w-7xl mx-auto px-5 py-10 lg:py-16"><div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 mb-12"><Link href="/" className="text-4xl font-black text-purple-300">CodeSaathi</Link><div className="flex flex-wrap gap-3"><Link className="btn-dark" href="/courses">Explore Courses</Link><Link className="btn-dark" href="/learning-workspace">Workspace</Link></div></div><div className="grid lg:grid-cols-2 gap-8 items-center"><div><p className="text-purple-300 font-bold mb-4">AI-Powered LMS & Online Coding Platform</p><h1 className="hero-title">Learn. Code. Practice. Track. Certify.</h1><p className="text-slate-300 text-lg mt-6 leading-8">CodeSaathi is a demo-ready LMS where students learn courses, watch lectures, save notes, use AI study tools, solve coding challenges, attempt quizzes, earn XP, and generate certificates.</p><div className="card mt-8"><h2 className="text-2xl font-bold mb-4">Login to Continue</h2><p className="text-slate-400 mb-5">Choose a role. Your role is saved across the platform until logout.</p><div className="grid sm:grid-cols-2 gap-4"><button onClick={()=>login("student")} className="btn-blue">Login as Student</button><button onClick={()=>login("instructor")} className="btn-purple">Login as Instructor</button></div>{role!=="guest"&&<p className="text-green-300 mt-4">Current role: {role}</p>}</div></div><div className="card"><h2 className="text-3xl font-black">Demo Flow</h2><div className="mt-6 space-y-4">{["Login as Demo Student","Open dashboard and continue completed Python course","Watch lesson and view demo YouTube lecture","Read notes and AI-generated summary","Attempt quiz and coding challenge","View certificate and analytics"].map((s,i)=><div key={s} className="flex gap-4"><span className="w-9 h-9 rounded-full bg-purple-700 flex items-center justify-center font-bold">{i+1}</span><p className="text-slate-300 pt-1">{s}</p></div>)}</div></div></div><section className="mt-16"><h2 className="page-title mb-6">Platform Features</h2><div className="grid-fit">{features.map(f=><div key={f} className="card"><h3 className="text-xl font-bold">{f}</h3></div>)}</div></section></section></main>
+export default function Home() {
+  return (
+    <main className="min-h-screen bg-slate-950 text-white">
+      <section className="max-w-7xl mx-auto px-6 py-10">
+        <nav className="flex items-center justify-between gap-4 mb-16">
+          <h1 className="text-3xl font-black text-purple-300">CodeSaathi</h1>
+          <div className="flex gap-3">
+            <Link href="/login" className="btn-dark">Login</Link>
+            <Link href="/login" className="btn-purple">Register</Link>
+          </div>
+        </nav>
+
+        <div className="grid lg:grid-cols-2 gap-10 items-center">
+          <div>
+            <p className="text-purple-300 font-bold">AI-Powered LMS & Coding Platform</p>
+            <h2 className="hero-title mt-4">Learn, Code, Practice & Earn Certificates</h2>
+            <p className="text-slate-300 mt-6 text-lg leading-8">
+              CodeSaathi provides role-based learning for students and instructors with courses,
+              quizzes, assignments, coding practice, AI assistant, leaderboard, progress tracking,
+              and certificates.
+            </p>
+
+            <div className="flex flex-wrap gap-4 mt-8">
+              <Link href="/login" className="btn-blue">Get Started</Link>
+              <Link href="/login" className="btn-dark">Login / Register</Link>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="text-2xl font-black">How CodeSaathi Works</h3>
+            <ol className="space-y-4 text-slate-300 mt-6">
+              <li>1. Register or login as Student / Instructor</li>
+              <li>2. Student learns from courses and workspace</li>
+              <li>3. Instructor creates courses, resources and assessments</li>
+              <li>4. Student attempts quiz, coding and earns certificate</li>
+              <li>5. AI assistant supports doubts, notes and code review</li>
+            </ol>
+          </div>
+        </div>
+
+        <div className="grid-fit mt-16">
+          {["Role-Based Access", "Course Catalog", "AI Assistant", "Quiz & Assignment", "Coding Practice", "Certificates"].map((x) => (
+            <div className="card" key={x}>
+              <h3 className="text-xl font-bold">{x}</h3>
+            </div>
+          ))}
+        </div>
+      </section>
+    </main>
+  );
 }

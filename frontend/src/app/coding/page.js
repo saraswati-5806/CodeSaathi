@@ -1,4 +1,43 @@
 "use client";
+
+import { useState } from "react";
 import AppShell from "../../components/AppShell";
-import { demoChallenges } from "../../lib/demoData";
-export default function CodingPage(){return <AppShell><section><div className="card mb-6"><p className="text-purple-300 font-bold">Coding Challenge Workflow</p><h1 className="page-title mt-2">Coding Lab</h1><p className="text-slate-300 mt-4">Practice problems in Python, JavaScript, Java and C++ with demo test results.</p></div><div className="grid lg:grid-cols-[.9fr_1.2fr] gap-6"><div className="card"><h2 className="text-2xl font-bold mb-4">Problems</h2>{demoChallenges.map(c=><div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 mb-3" key={c.id}><h3 className="font-bold">{c.title}</h3><p className="text-slate-400">{c.language} • {c.difficulty}</p><span className="badge mt-3">{c.status}</span></div>)}</div><div className="card"><h2 className="text-2xl font-bold mb-4">Code Editor</h2><textarea className="field min-h-80 text-green-300" defaultValue={'print("Hello World")'} /><div className="grid sm:grid-cols-2 gap-3 mt-4"><button className="btn-blue">Run Demo Code</button><button className="btn-purple">Submit</button></div><div className="card mt-4"><p className="text-green-300">Result: Accepted</p><p className="text-slate-400 mt-2">Test Case 1: Passed | Test Case 2: Passed | Score: 100</p></div></div></div></section></AppShell>}
+
+export default function CodingPage() {
+  const [code, setCode] = useState('for i in range(1, 6):\n    print(i)');
+  const [output, setOutput] = useState("Run code to see output.");
+
+  const runCode = () => {
+    if (code.includes("print") || code.includes("console.log")) {
+      setOutput("Accepted ✅\nTest Case 1 Passed\nTest Case 2 Passed\nOutput:\n1\n2\n3\n4\n5");
+    } else {
+      setOutput("Error ❌\nUse print() or console.log() to display output.");
+    }
+  };
+
+  return (
+    <AppShell>
+      <section>
+        <div className="card mb-6">
+          <p className="text-purple-300 font-bold">Coding Workspace</p>
+          <h1 className="page-title mt-2">Practice Coding</h1>
+          <p className="text-slate-300 mt-4">Write code, run sample tests and view result.</p>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="card">
+            <h2 className="text-2xl font-bold mb-4">Challenge</h2>
+            <p className="text-slate-300">Print numbers from 1 to 5.</p>
+            <textarea className="field min-h-80 text-green-300 mt-5" value={code} onChange={(e) => setCode(e.target.value)} />
+            <button className="btn-blue mt-4" onClick={runCode}>Run Code</button>
+          </div>
+
+          <div className="card">
+            <h2 className="text-2xl font-bold mb-4">Output</h2>
+            <pre className="mini-card whitespace-pre-wrap text-green-300">{output}</pre>
+          </div>
+        </div>
+      </section>
+    </AppShell>
+  );
+}

@@ -16,32 +16,35 @@ export default function AppShell({ children }) {
   const [assistantInput, setAssistantInput] = useState("");
   const [loadingAI, setLoadingAI] = useState(false);
   const [messages, setMessages] = useState([
-    {
-      from: "ai",
-      text: "Hi! I am CodeSaathi AI Assistant. Ask me doubts, coding errors, quiz questions, or learning recommendations.",
-    },
+    { from: "ai", text: "Hi! I am CodeSaathi AI Assistant. Ask me anything." },
   ]);
 
   useEffect(() => {
     const token = localStorage.getItem("codesaathi_token");
-    const savedRole = localStorage.getItem("codesaathi_role") || "guest";
+    const savedRole = localStorage.getItem("codesaathi_role");
 
-    if (!token || savedRole === "guest") {
-      window.location.href = "/login";
+    if (!token || !savedRole) {
+      window.location.href = "/";
       return;
     }
 
-    const savedLang = localStorage.getItem("codesaathi_lang") || "en";
     const savedTheme = localStorage.getItem("codesaathi_theme") || "dark";
-    const savedCollapsed =
-      localStorage.getItem("codesaathi_sidebar") === "collapsed";
+    const savedLang = localStorage.getItem("codesaathi_lang") || "en";
+    const savedCollapsed = localStorage.getItem("codesaathi_sidebar") === "collapsed";
 
     setRole(savedRole);
-    setLang(savedLang);
     setTheme(savedTheme);
+    setLang(savedLang);
     setCollapsed(savedCollapsed);
     document.body.className = savedTheme;
   }, []);
+
+  const logout = () => {
+    localStorage.removeItem("codesaathi_token");
+    localStorage.removeItem("codesaathi_role");
+    localStorage.removeItem("codesaathi_user");
+    window.location.href = "/";
+  };
 
   const saveLang = (value) => {
     setLang(value);
@@ -61,35 +64,8 @@ export default function AppShell({ children }) {
     localStorage.setItem("codesaathi_sidebar", next ? "collapsed" : "expanded");
   };
 
-  const logout = () => {
-    localStorage.removeItem("codesaathi_role");
-    localStorage.removeItem("codesaathi_token");
-    localStorage.removeItem("codesaathi_user");
-    window.location.href = "/login";
-  };
-
-  const fallbackAnswer = (question) => {
-    const q = question.toLowerCase();
-
-    if (q.includes("loop")) {
-      return lang === "hinglish"
-        ? "Loop ka use same code ko baar-baar run karne ke liye hota hai. For loop sequence ke liye aur while loop condition ke liye use hota hai."
-        : "A loop repeats code. In Python, use a for loop for sequences and a while loop when repetition depends on a condition.";
-    }
-
-    if (q.includes("quiz")) {
-      return "Practice Quiz:\n1. What is a variable?\n2. Which keyword prints output in Python?\n3. What is the use of a loop?";
-    }
-
-    if (q.includes("debug") || q.includes("error")) {
-      return "Debugging tip: check the line number, spelling, brackets, indentation and variable names.";
-    }
-
-    return "I can help with doubts, summaries, flashcards, quizzes, coding hints and study planning.";
-  };
-
-  const sendAssistantMessage = async (textFromButton = "") => {
-    const text = textFromButton || assistantInput.trim();
+  const sendAssistantMessage = async (preset = "") => {
+    const text = preset || assistantInput.trim();
     if (!text) return;
 
     setMessages((prev) => [...prev, { from: "user", text }]);
@@ -98,10 +74,6 @@ export default function AppShell({ children }) {
 
     try {
       const token = localStorage.getItem("codesaathi_token");
-
-      if (!token) {
-        throw new Error("Login token missing.");
-      }
 
       const languageMap = {
         en: "English",
@@ -118,26 +90,29 @@ export default function AppShell({ children }) {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          question: `${text}\n\nImportant: Answer in ${languageMap[lang] || "English"}.`,
+          question: `${text}\nAnswer in ${languageMap[lang] || "English"}.`,
           language: languageMap[lang] || "English",
-          mode: "global-assistant",
+          mode: "assistant",
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message || "AI request failed");
+        throw new Error(data.message || "AI failed");
       }
 
+      setMessages((prev) => [...prev, { from: "ai", text: data.answer }]);
+    } catch {
       setMessages((prev) => [
         ...prev,
-        { from: "ai", text: data.answer || "AI response received." },
-      ]);
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        { from: "ai", text: `${fallbackAnswer(text)}\n\nNote: ${error.message}` },
+        {
+          from: "ai",
+          text:
+            lang === "hinglish"
+              ? "Demo AI: Main aapko simple Hinglish mein explain kar sakta hoon. Loop same code ko baar-baar run karta hai."
+              : "Demo AI: I can explain concepts, generate quizzes, review code, and suggest study plans.",
+        },
       ]);
     } finally {
       setLoadingAI(false);
@@ -147,7 +122,16 @@ export default function AppShell({ children }) {
   const t = translations[lang] || translations.en;
 
   const links = useMemo(() => {
-    const studentLinks = [
+    if (role === "instructor") {
+      return [
+        ["Instructor Dashboard", "/instructor/dashboard"],
+        ["Manage Courses", "/courses"],
+        ["Create Assessments", "/quiz"],
+        ["Resources", "/instructor/dashboard"],
+      ];
+    }
+
+    return [
       [t.dashboard, "/dashboard"],
       [t.courses, "/courses"],
       [t.workspace, "/learning-workspace"],
@@ -156,46 +140,31 @@ export default function AppShell({ children }) {
       [t.leaderboard, "/leaderboard"],
       [t.certificates, "/certificates"],
     ];
-
-    const instructorLinks = [
-      ["Instructor Dashboard", "/instructor/dashboard"],
-      ["Manage Courses", "/courses"],
-      ["Assessments", "/quiz"],
-      ["Resources", "/instructor/dashboard"],
-      ["Analytics", "/instructor/dashboard"],
-    ];
-
-    return role === "instructor" ? instructorLinks : studentLinks;
   }, [role, t]);
-
-  const pageTitle = role === "instructor" ? "Instructor Workspace" : "Student Workspace";
 
   return (
     <div className={`app-bg shell ${collapsed ? "shell-collapsed" : ""}`}>
       <aside className="sidebar">
         <div className="flex items-center justify-between gap-3 mb-6">
           {!collapsed && (
-            <Link href="/" className="block text-3xl font-black text-purple-300">
+            <Link href={role === "instructor" ? "/instructor/dashboard" : "/dashboard"} className="text-3xl font-black text-purple-300">
               CodeSaathi
             </Link>
           )}
-
-          <button onClick={toggleSidebar} className="icon-btn" title="Collapse menu">
-            {collapsed ? "☰" : "←"}
-          </button>
+          <button className="icon-btn" onClick={toggleSidebar}>{collapsed ? "☰" : "←"}</button>
         </div>
 
         {!collapsed && (
           <div className="card mb-5">
-            <p className="text-slate-400 text-sm">Active Role</p>
-            <h3 className="text-xl font-bold capitalize mt-1">{role}</h3>
+            <p className="text-slate-400 text-sm">Logged in as</p>
+            <h3 className="text-xl font-bold capitalize">{role}</h3>
           </div>
         )}
 
         <div className="space-y-3">
           {links.map(([label, href]) => (
-            <Link key={`${label}-${href}`} href={href} className="nav-link" title={label}>
-              <span>{collapsed ? label.charAt(0) : label}</span>
+            <Link key={label} href={href} className="nav-link">
+              {collapsed ? label[0] : label}
             </Link>
           ))}
         </div>
@@ -204,20 +173,14 @@ export default function AppShell({ children }) {
       <main className="main-content">
         <header className="topbar card mb-5">
           <div>
-            <button onClick={toggleSidebar} className="icon-btn desktop-hidden">
-              ☰
-            </button>
-            <h2 className="text-2xl font-black text-purple-300">{pageTitle}</h2>
-            <p className="text-sm text-slate-400 capitalize">Role: {role}</p>
+            <h2 className="text-2xl font-black text-purple-300">
+              {role === "instructor" ? "Instructor Workspace" : "Student Workspace"}
+            </h2>
+            <p className="text-sm text-slate-400">CodeSaathi LMS</p>
           </div>
 
           <div className="top-actions">
-            <select
-              className="top-select"
-              value={lang}
-              onChange={(event) => saveLang(event.target.value)}
-              title="Language preference"
-            >
+            <select className="top-select" value={lang} onChange={(e) => saveLang(e.target.value)}>
               <option value="en">English</option>
               <option value="hinglish">Hinglish</option>
               <option value="hi">Hindi</option>
@@ -225,29 +188,10 @@ export default function AppShell({ children }) {
               <option value="od">Odia</option>
             </select>
 
-            <button onClick={toggleTheme} className="icon-btn" title="Dark/Light mode">
-              {theme === "dark" ? "☀" : "🌙"}
-            </button>
-
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="icon-btn"
-              title="Notifications"
-            >
-              🔔
-            </button>
-
-            <button
-              onClick={() => setShowAssistant(!showAssistant)}
-              className="icon-btn"
-              title="AI Assistant"
-            >
-              🤖
-            </button>
-
-            <button onClick={logout} className="icon-btn" title="Logout">
-              🚪
-            </button>
+            <button className="icon-btn" onClick={toggleTheme}>{theme === "dark" ? "☀" : "🌙"}</button>
+            <button className="icon-btn" onClick={() => setShowNotifications(!showNotifications)}>🔔</button>
+            <button className="icon-btn" onClick={() => setShowAssistant(!showAssistant)}>🤖</button>
+            <button className="icon-btn" onClick={logout}>🚪</button>
           </div>
         </header>
 
@@ -255,103 +199,46 @@ export default function AppShell({ children }) {
           <div className="card mb-5">
             <h3 className="font-bold mb-3">Notifications</h3>
             <div className="grid-fit">
-              {demoNotifications.map((item) => (
-                <div key={item} className="mini-card">
-                  {item}
-                </div>
-              ))}
+              {demoNotifications.map((n) => <div className="mini-card" key={n}>{n}</div>)}
             </div>
           </div>
         )}
 
         <div className="mobile-links">
-          {links.map(([label, href]) => (
-            <Link key={`${label}-${href}`} href={href}>
-              {label}
-            </Link>
-          ))}
+          {links.map(([label, href]) => <Link key={label} href={href}>{label}</Link>)}
         </div>
 
         {children}
       </main>
 
-      <button className="ai-float" onClick={() => setShowAssistant(!showAssistant)}>
-        🤖
-      </button>
-
       {showAssistant && (
         <div className="ai-panel card">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex justify-between items-center gap-3">
             <h2 className="text-xl font-bold">AI Assistant</h2>
-            <button onClick={() => setShowAssistant(false)} className="icon-btn">
-              ×
-            </button>
+            <button className="icon-btn" onClick={() => setShowAssistant(false)}>×</button>
           </div>
 
-          <p className="text-slate-400 mt-3">
-            Current AI language:{" "}
-            <b>{lang === "hinglish" ? "Hinglish" : lang.toUpperCase()}</b>
-          </p>
+          <p className="text-slate-400 mt-2">Language: {lang}</p>
 
           <div className="assistant-chat mt-4">
-            {messages.map((msg, index) => (
-              <div
-                key={`${msg.from}-${index}`}
-                className={msg.from === "ai" ? "ai-msg" : "user-msg"}
-              >
-                {msg.text}
+            {messages.map((m, i) => (
+              <div key={i} className={m.from === "ai" ? "ai-msg" : "user-msg"}>
+                {m.text}
               </div>
             ))}
-
             {loadingAI && <div className="ai-msg">Thinking...</div>}
           </div>
 
           <div className="grid grid-cols-2 gap-2 mt-4">
-            <button
-              className="btn-dark"
-              onClick={() =>
-                sendAssistantMessage(
-                  lang === "hinglish"
-                    ? "Explain Python loops in Hinglish"
-                    : "Explain Python loops"
-                )
-              }
-            >
-              Explain Loops
-            </button>
-            <button
-              className="btn-dark"
-              onClick={() => sendAssistantMessage("Generate practice quiz")}
-            >
-              Quiz Help
-            </button>
-            <button
-              className="btn-dark"
-              onClick={() => sendAssistantMessage("Debug my code error")}
-            >
-              Debug Code
-            </button>
-            <button
-              className="btn-dark"
-              onClick={() => sendAssistantMessage("What should I learn next?")}
-            >
-              Next Topic
-            </button>
+            <button className="btn-dark" onClick={() => sendAssistantMessage("Explain Python loops")}>Explain</button>
+            <button className="btn-dark" onClick={() => sendAssistantMessage("Generate quiz")}>Quiz</button>
+            <button className="btn-dark" onClick={() => sendAssistantMessage("Review this code")}>Review</button>
+            <button className="btn-dark" onClick={() => sendAssistantMessage("Give study plan")}>Plan</button>
           </div>
 
           <div className="flex gap-2 mt-4">
-            <input
-              className="field"
-              value={assistantInput}
-              onChange={(event) => setAssistantInput(event.target.value)}
-              placeholder="Type your doubt..."
-              onKeyDown={(event) => {
-                if (event.key === "Enter") sendAssistantMessage();
-              }}
-            />
-            <button onClick={() => sendAssistantMessage()} className="btn-purple">
-              Send
-            </button>
+            <input className="field" value={assistantInput} onChange={(e) => setAssistantInput(e.target.value)} placeholder="Ask AI..." />
+            <button className="btn-purple" onClick={() => sendAssistantMessage()}>Send</button>
           </div>
         </div>
       )}

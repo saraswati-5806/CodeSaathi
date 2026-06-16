@@ -17,19 +17,13 @@ export default function LoginPage() {
     const token = localStorage.getItem("codesaathi_token");
     const savedRole = localStorage.getItem("codesaathi_role");
 
-    if (token && savedRole === "instructor") {
-      window.location.href = "/instructor/dashboard";
-    }
-
-    if (token && savedRole === "student") {
-      window.location.href = "/dashboard";
-    }
+    if (token && savedRole === "student") window.location.href = "/dashboard";
+    if (token && savedRole === "instructor") window.location.href = "/instructor/dashboard";
   }, []);
 
-  const switchRole = (nextRole) => {
-    setRole(nextRole);
-
-    if (nextRole === "instructor") {
+  const switchRole = (r) => {
+    setRole(r);
+    if (r === "instructor") {
       setName("Demo Instructor");
       setEmail("instructor@codesaathi.com");
       setPassword("Instructor@123");
@@ -40,51 +34,37 @@ export default function LoginPage() {
     }
   };
 
-  const submitAuth = async () => {
+  const submit = async () => {
     setLoading(true);
     setMessage("");
 
     try {
       const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
+      const body = mode === "login" ? { email, password } : { name, email, password, role };
 
-      const body =
-        mode === "login"
-          ? { email, password }
-          : { name, email, password, role };
-
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const res = await fetch(`${API_URL}${endpoint}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || data.error || "Authentication failed");
-      }
+      if (!res.ok || !data.success) throw new Error(data.message || data.error || "Authentication failed");
 
-      const finalUser = data.user || data.data?.user || { name, email, role };
-      const finalToken = data.token || data.data?.token;
-      const finalRole = finalUser.role || role;
+      const user = data.user || data.data?.user || { name, email, role };
+      const token = data.token || data.data?.token;
+      const finalRole = user.role || role;
 
-      if (!finalToken) {
-        throw new Error("Token missing from backend response");
-      }
+      if (!token) throw new Error("Token missing from backend response");
 
-      localStorage.setItem("codesaathi_token", finalToken);
+      localStorage.setItem("codesaathi_token", token);
       localStorage.setItem("codesaathi_role", finalRole);
-      localStorage.setItem("codesaathi_user", JSON.stringify(finalUser));
+      localStorage.setItem("codesaathi_user", JSON.stringify(user));
 
-      if (finalRole === "instructor") {
-        window.location.href = "/instructor/dashboard";
-      } else {
-        window.location.href = "/dashboard";
-      }
-    } catch (error) {
-      setMessage(error.message);
+      window.location.href = finalRole === "instructor" ? "/instructor/dashboard" : "/dashboard";
+    } catch (e) {
+      setMessage(e.message);
     } finally {
       setLoading(false);
     }
@@ -95,140 +75,50 @@ export default function LoginPage() {
       <section className="card w-full max-w-6xl">
         <div className="grid lg:grid-cols-2 gap-10 items-center">
           <div>
-            <p className="text-purple-300 font-bold">
-              AI-Powered LMS & Coding Platform
-            </p>
-
-            <h1 className="hero-title mt-3">CodeSaathi</h1>
-
-            <p className="text-slate-300 mt-5 leading-8 text-lg">
-              Login or register first to access the platform. Students and
-              instructors get separate dashboards, navigation menus, features,
-              and protected workflows.
+            <p className="text-purple-300 font-bold">Welcome to</p>
+            <h1 className="hero-title mt-2">CodeSaathi</h1>
+            <p className="text-slate-300 mt-5 leading-8">
+              Register or login first. Students and instructors get different protected dashboards.
             </p>
 
             <div className="grid sm:grid-cols-2 gap-4 mt-8">
-              <button
-                type="button"
-                className={role === "student" ? "btn-blue" : "btn-dark"}
-                onClick={() => switchRole("student")}
-              >
-                🎓 Student
-              </button>
-
-              <button
-                type="button"
-                className={role === "instructor" ? "btn-purple" : "btn-dark"}
-                onClick={() => switchRole("instructor")}
-              >
-                👨‍🏫 Instructor
-              </button>
+              <button className={role === "student" ? "btn-blue" : "btn-dark"} onClick={() => switchRole("student")}>🎓 Student</button>
+              <button className={role === "instructor" ? "btn-purple" : "btn-dark"} onClick={() => switchRole("instructor")}>👨‍🏫 Instructor</button>
             </div>
 
-            <div className="grid sm:grid-cols-3 gap-4 mt-8">
-              <div className="mini-card">
-                <b>Role Based</b>
-                <p className="text-slate-400 mt-2">Separate access control</p>
-              </div>
-
-              <div className="mini-card">
-                <b>JWT Auth</b>
-                <p className="text-slate-400 mt-2">Secure token login</p>
-              </div>
-
-              <div className="mini-card">
-                <b>AI LMS</b>
-                <p className="text-slate-400 mt-2">Gemini learning support</p>
-              </div>
-            </div>
+            <Link href="/" className="btn-dark mt-6">← Back to Landing</Link>
           </div>
 
           <div className="card">
             <div className="grid grid-cols-2 gap-3 mb-6">
-              <button
-                type="button"
-                className={mode === "login" ? "btn-blue" : "btn-dark"}
-                onClick={() => setMode("login")}
-              >
-                Login
-              </button>
-
-              <button
-                type="button"
-                className={mode === "register" ? "btn-purple" : "btn-dark"}
-                onClick={() => setMode("register")}
-              >
-                Register
-              </button>
+              <button className={mode === "login" ? "btn-blue" : "btn-dark"} onClick={() => setMode("login")}>Login</button>
+              <button className={mode === "register" ? "btn-purple" : "btn-dark"} onClick={() => setMode("register")}>Register</button>
             </div>
 
-            <p className="text-purple-300 font-bold capitalize">
-              {role} {mode}
-            </p>
-
-            <h2 className="text-3xl font-black mt-2">
-              {mode === "login" ? "Welcome Back" : "Create Account"}
-            </h2>
+            <h2 className="text-3xl font-black capitalize">{role} {mode}</h2>
 
             <div className="space-y-4 mt-6">
-              {mode === "register" && (
-                <input
-                  className="field"
-                  placeholder="Full Name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                />
-              )}
-
-              <input
-                className="field"
-                placeholder="Email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-
-              <input
-                className="field"
-                placeholder="Password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
+              {mode === "register" && <input className="field" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" />}
+              <input className="field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+              <input className="field" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
 
               {mode === "register" && (
-                <select
-                  className="field"
-                  value={role}
-                  onChange={(event) => switchRole(event.target.value)}
-                >
+                <select className="field" value={role} onChange={(e) => switchRole(e.target.value)}>
                   <option value="student">Student</option>
                   <option value="instructor">Instructor</option>
                 </select>
               )}
 
-              <button
-                type="button"
-                onClick={submitAuth}
-                disabled={loading}
-                className="btn-blue w-full"
-              >
-                {loading
-                  ? "Please wait..."
-                  : mode === "login"
-                  ? "Login"
-                  : "Create Account"}
+              <button className="btn-blue w-full" disabled={loading} onClick={submit}>
+                {loading ? "Please wait..." : mode === "login" ? "Login" : "Create Account"}
               </button>
 
               {message && <div className="mini-card text-red-300">{message}</div>}
 
               <div className="mini-card">
                 <p className="font-bold">Demo Credentials</p>
-                <p className="text-slate-400 mt-2">
-                  Student: student@codesaathi.com / Student@123
-                </p>
-                <p className="text-slate-400 mt-1">
-                  Instructor: instructor@codesaathi.com / Instructor@123
-                </p>
+                <p className="text-slate-400 mt-2">Student: student@codesaathi.com / Student@123</p>
+                <p className="text-slate-400">Instructor: instructor@codesaathi.com / Instructor@123</p>
               </div>
             </div>
           </div>
