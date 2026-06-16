@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { demoNotifications, translations } from "../lib/demoData";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 export default function AppShell({ children }) {
   const [role, setRole] = useState("guest");
   const [lang, setLang] = useState("en");
@@ -12,11 +14,11 @@ export default function AppShell({ children }) {
   const [showAssistant, setShowAssistant] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [assistantInput, setAssistantInput] = useState("");
+  const [loadingAI, setLoadingAI] = useState(false);
   const [messages, setMessages] = useState([
     {
       from: "ai",
-      text:
-        "Hi! I am CodeSaathi AI Assistant. Ask me doubts, coding errors, quiz questions, or learning recommendations.",
+      text: "Hi! I am CodeSaathi AI Assistant. Ask me doubts, coding errors, quiz questions, or learning recommendations.",
     },
   ]);
 
@@ -59,7 +61,7 @@ export default function AppShell({ children }) {
     window.location.href = "/";
   };
 
-  const generateAIAnswer = (question) => {
+  const fallbackAnswer = (question) => {
     const q = question.toLowerCase();
 
     if (q.includes("loop")) {
@@ -71,34 +73,69 @@ export default function AppShell({ children }) {
     }
 
     if (q.includes("debug") || q.includes("error")) {
-      return "Debugging tip: Read the error line number, check spelling, brackets, indentation, and variable names. Then test with small input.";
-    }
-
-    if (q.includes("next") || q.includes("learn")) {
-      return "Recommended path: Python basics → Loops → Functions → Lists → File handling → DSA arrays → Mini project.";
+      return "Debugging tip: check line number, spelling, brackets, indentation and variable names.";
     }
 
     if (q.includes("hinglish")) {
-      return "Hinglish explanation: Loop ka use same code ko baar-baar run karne ke liye hota hai. For loop sequence ke liye, while loop condition ke liye.";
+      return "Hinglish: Loop ka use same code ko baar-baar run karne ke liye hota hai.";
     }
 
-    return "I can help you understand concepts, generate practice questions, debug code, and suggest what to learn next. Try asking: Explain Python loops in Hinglish.";
+    return "I can help with doubts, summaries, flashcards, quizzes, coding hints and study planning.";
   };
 
-  const sendAssistantMessage = (textFromButton = "") => {
+  const sendAssistantMessage = async (textFromButton = "") => {
     const text = textFromButton || assistantInput.trim();
-
     if (!text) return;
 
-    const answer = generateAIAnswer(text);
-
-    setMessages((prev) => [
-      ...prev,
-      { from: "user", text },
-      { from: "ai", text: answer },
-    ]);
-
+    const userMessage = { from: "user", text };
+    setMessages((prev) => [...prev, userMessage]);
     setAssistantInput("");
+    setLoadingAI(true);
+
+    try {
+      const token = localStorage.getItem("codesaathi_token");
+
+      if (!token) {
+        throw new Error("Login token missing. Showing demo AI answer.");
+      }
+
+      const response = await fetch(`${API_URL}/api/ai/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          question: text,
+          language: lang === "hinglish" ? "Hinglish" : lang,
+          mode: "global-assistant",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "AI request failed");
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          from: "ai",
+          text: data.answer || "AI response received.",
+        },
+      ]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          from: "ai",
+          text: `${fallbackAnswer(text)}\n\nNote: ${error.message}`,
+        },
+      ]);
+    } finally {
+      setLoadingAI(false);
+    }
   };
 
   const t = translations[lang] || translations.en;
@@ -138,12 +175,7 @@ export default function AppShell({ children }) {
 
         <div className="space-y-3">
           {links.map(([label, href]) => (
-            <Link
-              key={href}
-              href={href}
-              className="nav-link"
-              title={label}
-            >
+            <Link key={href} href={href} className="nav-link" title={label}>
               <span>{collapsed ? label.charAt(0) : label}</span>
             </Link>
           ))}
@@ -226,10 +258,7 @@ export default function AppShell({ children }) {
         {children}
       </main>
 
-      <button
-        className="ai-float"
-        onClick={() => setShowAssistant(!showAssistant)}
-      >
+      <button className="ai-float" onClick={() => setShowAssistant(!showAssistant)}>
         🤖
       </button>
 
@@ -255,6 +284,8 @@ export default function AppShell({ children }) {
                 {msg.text}
               </div>
             ))}
+
+            {loadingAI && <div className="ai-msg">Thinking...</div>}
           </div>
 
           <div className="grid grid-cols-2 gap-2 mt-4">
