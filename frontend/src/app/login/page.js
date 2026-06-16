@@ -1,27 +1,24 @@
 "use client";
 
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-export default function LoginPage() {
+function LoginContent() {
   const searchParams = useSearchParams();
   const requestedRole = searchParams.get("role") || "student";
 
-  const [role, setRole] = useState(requestedRole);
-  const [email, setEmail] = useState(
-    requestedRole === "instructor"
-      ? "instructor@codesaathi.com"
-      : "student@codesaathi.com"
-  );
-  const [password, setPassword] = useState(
-    requestedRole === "instructor" ? "Instructor@123" : "Student@123"
-  );
+  const [role, setRole] = useState("student");
+  const [email, setEmail] = useState("student@codesaathi.com");
+  const [password, setPassword] = useState("Student@123");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
+    const initialRole = requestedRole === "instructor" ? "instructor" : "student";
+    switchRole(initialRole);
+
     const savedToken = localStorage.getItem("codesaathi_token");
     const savedRole = localStorage.getItem("codesaathi_role");
 
@@ -32,7 +29,7 @@ export default function LoginPage() {
     if (savedToken && savedRole === "student") {
       window.location.href = "/dashboard";
     }
-  }, []);
+  }, [requestedRole]);
 
   const switchRole = (nextRole) => {
     setRole(nextRole);
@@ -105,6 +102,7 @@ export default function LoginPage() {
               >
                 Student Login
               </button>
+
               <button
                 className={role === "instructor" ? "btn-purple" : "btn-dark"}
                 onClick={() => switchRole("instructor")}
@@ -154,5 +152,19 @@ export default function LoginPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="app-bg min-h-screen flex items-center justify-center px-4">
+          <div className="card">Loading login...</div>
+        </main>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
